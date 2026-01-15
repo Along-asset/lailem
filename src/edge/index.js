@@ -5,22 +5,38 @@ const DEFAULT_TOKEN_SECRET = 'change_me_in_esa_env'
 const STAFF_INDEX_KEY = 'staff_index'
 const MAX_BODY_BYTES = 2_000_000
 
+function normalizeEnvValue(v) {
+  if (v == null) return null
+  if (typeof v === 'string') return v
+  try {
+    return String(v)
+  } catch {
+    return null
+  }
+}
+
 function readEnvValue(env, key) {
-  if (env && typeof env === 'object' && key in env) {
-    const v = env[key]
-    if (v != null) {
-      if (typeof v === 'string') return v
+  if (env && typeof env === 'object') {
+    if (key in env) {
+      const v = normalizeEnvValue(env[key])
+      if (v != null) return v
+    }
+    if (typeof env.get === 'function') {
       try {
-        return String(v)
+        const v = normalizeEnvValue(env.get(key))
+        if (v != null) return v
       } catch {}
     }
   }
-  if (typeof process !== 'undefined' && process.env && key in process.env) {
-    const v = process.env[key]
-    if (v != null) {
-      if (typeof v === 'string') return v
+  if (typeof process !== 'undefined' && process.env) {
+    if (key in process.env) {
+      const v = normalizeEnvValue(process.env[key])
+      if (v != null) return v
+    }
+    if (typeof process.env.get === 'function') {
       try {
-        return String(v)
+        const v = normalizeEnvValue(process.env.get(key))
+        if (v != null) return v
       } catch {}
     }
   }

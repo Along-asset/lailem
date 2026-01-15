@@ -8,11 +8,21 @@ const MAX_BODY_BYTES = 2_000_000
 function readEnvValue(env, key) {
   if (env && typeof env === 'object' && key in env) {
     const v = env[key]
-    if (typeof v === 'string') return v
+    if (v != null) {
+      if (typeof v === 'string') return v
+      try {
+        return String(v)
+      } catch {}
+    }
   }
   if (typeof process !== 'undefined' && process.env && key in process.env) {
     const v = process.env[key]
-    if (typeof v === 'string') return v
+    if (v != null) {
+      if (typeof v === 'string') return v
+      try {
+        return String(v)
+      } catch {}
+    }
   }
   return null
 }

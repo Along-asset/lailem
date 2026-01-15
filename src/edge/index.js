@@ -233,8 +233,12 @@ async function handleAdminLogin(request, env) {
   const password = typeof body.data.password === 'string' ? body.data.password.trim() : ''
   if (!password) return badRequest('password_required')
   const adminPassword = String(getAdminPassword(env) || '').trim()
-  if (!adminPassword) return unauthorized('invalid_password')
-  if (password !== adminPassword) return unauthorized('invalid_password')
+  if (!adminPassword) {
+    return unauthorized('admin_password_not_configured')
+  }
+  if (password !== adminPassword) {
+    return unauthorized('invalid_password')
+  }
 
   const tokenSecret = String(getTokenSecret(env) || '')
   const token = await signToken(tokenSecret, { role: 'admin', exp: Date.now() + 7 * 24 * 60 * 60 * 1000 })

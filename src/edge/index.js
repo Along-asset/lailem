@@ -16,30 +16,60 @@ function normalizeEnvValue(v) {
 }
 
 function readEnvValue(env, key) {
-  if (env && typeof env === 'object') {
-    if (key in env) {
-      const v = normalizeEnvValue(env[key])
-      if (v != null) return v
-    }
-    if (typeof env.get === 'function') {
+  const seen = new Set()
+
+  function readFromObjectLike(obj, k) {
+    if (!obj || (typeof obj !== 'object' && typeof obj !== 'function')) return null
+    if (k in obj) return normalizeEnvValue(obj[k])
+    if (typeof obj.get === 'function') {
       try {
-        const v = normalizeEnvValue(env.get(key))
-        if (v != null) return v
-      } catch {}
+        return normalizeEnvValue(obj.get(k))
+      } catch {
+        return null
+      }
     }
+    return null
   }
-  if (typeof process !== 'undefined' && process.env) {
-    if (key in process.env) {
-      const v = normalizeEnvValue(process.env[key])
-      if (v != null) return v
+
+  function visit(obj, depth) {
+    if (!obj || (typeof obj !== 'object' && typeof obj !== 'function')) return null
+    if (seen.has(obj)) return null
+    seen.add(obj)
+
+    const direct = readFromObjectLike(obj, key)
+    if (direct != null) return direct
+    if (depth <= 0) return null
+
+    const containerKeys = [
+      'env',
+      'vars',
+      'variables',
+      'bindings',
+      'binding',
+      'context',
+      'ctx',
+      'config',
+      'cfg',
+      'settings',
+      'options',
+    ]
+    for (const ck of containerKeys) {
+      if (ck in obj) {
+        const nested = visit(obj[ck], depth - 1)
+        if (nested != null) return nested
+      }
     }
-    if (typeof process.env.get === 'function') {
-      try {
-        const v = normalizeEnvValue(process.env.get(key))
-        if (v != null) return v
-      } catch {}
-    }
+    return null
   }
+
+  const fromEnv = visit(env, 3)
+  if (fromEnv != null) return fromEnv
+
+  if (typeof process !== 'undefined' && process && process.env) {
+    const fromProcessEnv = visit(process.env, 1)
+    if (fromProcessEnv != null) return fromProcessEnv
+  }
+
   return null
 }
 

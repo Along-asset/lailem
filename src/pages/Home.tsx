@@ -17,8 +17,6 @@ export default function Home() {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    setError(null)
     apiListStaff()
       .then((data) => {
         if (cancelled) return

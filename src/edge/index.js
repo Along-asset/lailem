@@ -196,9 +196,9 @@ async function handleAdminLogin(request) {
   const body = await readJsonBody(request)
   if (!body.ok) return body.error === 'payload_too_large' ? tooLarge() : badRequest(body.error)
 
-  const password = typeof body.data.password === 'string' ? body.data.password : ''
+  const password = typeof body.data.password === 'string' ? body.data.password.trim() : ''
   if (!password) return badRequest('password_required')
-  if (password !== ADMIN_PASSWORD) return unauthorized('invalid_password')
+  if (password !== (ADMIN_PASSWORD || '').trim()) return unauthorized('invalid_password')
 
   const token = await signToken({ role: 'admin', exp: Date.now() + 7 * 24 * 60 * 60 * 1000 })
   return json({ token })

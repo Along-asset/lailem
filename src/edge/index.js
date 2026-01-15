@@ -1,17 +1,41 @@
-const KV_NAMESPACE = typeof process !== 'undefined' && process.env && process.env.ESA_KV_NAMESPACE
-  ? process.env.ESA_KV_NAMESPACE
-  : 'lailem_staff'
-
-const ADMIN_PASSWORD = typeof process !== 'undefined' && process.env && process.env.ADMIN_PASSWORD
-  ? process.env.ADMIN_PASSWORD
-  : 'admin'
-
-const TOKEN_SECRET = typeof process !== 'undefined' && process.env && process.env.TOKEN_SECRET
-  ? process.env.TOKEN_SECRET
-  : 'change_me_in_esa_env'
+const DEFAULT_KV_NAMESPACE = 'lailem_staff'
+const DEFAULT_ADMIN_PASSWORD = 'admin'
+const DEFAULT_TOKEN_SECRET = 'change_me_in_esa_env'
 
 const STAFF_INDEX_KEY = 'staff_index'
 const MAX_BODY_BYTES = 2_000_000
+
+function readEnvValue(env, key) {
+  if (env && typeof env === 'object' && key in env) {
+    const v = env[key]
+    if (typeof v === 'string') return v
+  }
+  if (typeof process !== 'undefined' && process.env && key in process.env) {
+    const v = process.env[key]
+    if (typeof v === 'string') return v
+  }
+  return null
+}
+
+function firstEnv(env, keys, fallback) {
+  for (const k of keys) {
+    const v = readEnvValue(env, k)
+    if (typeof v === 'string' && v.length > 0) return v
+  }
+  return fallback
+}
+
+function getKvNamespace(env) {
+  return firstEnv(env, ['KV_NAMESPACE', 'ESA_KV_NAMESPACE', 'ESA_KV', 'ESA_KV_NS'], DEFAULT_KV_NAMESPACE)
+}
+
+function getAdminPassword(env) {
+  return firstEnv(env, ['ADMIN_PASSWORD', 'ESA_ADMIN_PASSWORD'], DEFAULT_ADMIN_PASSWORD)
+}
+
+function getTokenSecret(env) {
+  return firstEnv(env, ['JWT_SECRET', 'TOKEN_SECRET', 'ESA_JWT_SECRET', 'ESA_TOKEN_SECRET'], DEFAULT_TOKEN_SECRET)
+}
 
 function json(data, init = {}) {
   const headers = new Headers(init.headers)
@@ -89,15 +113,15 @@ async function hmacSha256(secret, data) {
   return new Uint8Array(signature)
 }
 
-async function signToken(payload) {
+async function signToken(secret, payload) {
   const payloadJson = JSON.stringify(payload)
   const payloadB64 = base64UrlEncode(new TextEncoder().encode(payloadJson))
-  const sigBytes = await hmacSha256(TOKEN_SECRET, payloadB64)
+  const sigBytes = await hmacSha256(secret, payloadB64)
   const sigB64 = base64UrlEncode(sigBytes)
   return `${payloadB64}.${sigB64}`
 }
 
-async function verifyToken(token) {
+async function verifyToken(secret, token) {
   const parts = token.split('.')
   if (parts.length !== 2) return { ok: false }
   const [payloadB64, sigB64] = parts
@@ -109,7 +133,7 @@ async function verifyToken(token) {
     return { ok: false }
   }
 
-  const expectedSig = await hmacSha256(TOKEN_SECRET, payloadB64)
+  const expectedSig = await hmacSha256(secret, payloadB64)
   const sigBytes = base64UrlDecodeToBytes(sigB64)
   if (sigBytes.length !== expectedSig.length) return { ok: false }
   for (let i = 0; i < sigBytes.length; i++) {
@@ -131,8 +155,8 @@ function staffKey(id) {
   return `staff_${id}`
 }
 
-async function getEdgeKv() {
-  return new EdgeKV({ namespace: KV_NAMESPACE })
+async function getEdgeKv(env) {
+  return new EdgeKV({ namespace: getKvNamespace(env) })
 }
 
 async function getStaffIndex(edgeKV) {
@@ -192,20 +216,23 @@ function normalizeStaffInput(input) {
   }
 }
 
-async function handleAdminLogin(request) {
+async function handleAdminLogin(request, env) {
   const body = await readJsonBody(request)
   if (!body.ok) return body.error === 'payload_too_large' ? tooLarge() : badRequest(body.error)
 
   const password = typeof body.data.password === 'string' ? body.data.password.trim() : ''
   if (!password) return badRequest('password_required')
-  if (password !== (ADMIN_PASSWORD || '').trim()) return unauthorized('invalid_password')
+  const adminPassword = String(getAdminPassword(env) || '').trim()
+  if (!adminPassword) return unauthorized('invalid_password')
+  if (password !== adminPassword) return unauthorized('invalid_password')
 
-  const token = await signToken({ role: 'admin', exp: Date.now() + 7 * 24 * 60 * 60 * 1000 })
+  const tokenSecret = String(getTokenSecret(env) || '')
+  const token = await signToken(tokenSecret, { role: 'admin', exp: Date.now() + 7 * 24 * 60 * 60 * 1000 })
   return json({ token })
 }
 
-async function handleListStaff() {
-  const edgeKV = await getEdgeKv()
+async function handleListStaff(env) {
+  const edgeKV = await getEdgeKv(env)
   const ids = await getStaffIndex(edgeKV)
   const staffItems = await Promise.all(
     ids.map(async (id) => {
@@ -222,16 +249,16 @@ async function handleListStaff() {
   return json({ items })
 }
 
-async function requireAdmin(request) {
+async function requireAdmin(request, env) {
   const token = getBearerToken(request)
   if (!token) return { ok: false, response: unauthorized() }
-  const verified = await verifyToken(token)
+  const verified = await verifyToken(String(getTokenSecret(env) || ''), token)
   if (!verified.ok) return { ok: false, response: unauthorized() }
   return { ok: true }
 }
 
-async function handleCreateStaff(request) {
-  const auth = await requireAdmin(request)
+async function handleCreateStaff(request, env) {
+  const auth = await requireAdmin(request, env)
   if (!auth.ok) return auth.response
 
   const body = await readJsonBody(request)
@@ -240,7 +267,7 @@ async function handleCreateStaff(request) {
   const normalized = normalizeStaffInput(body.data)
   if (!normalized.ok) return badRequest(normalized.error)
 
-  const edgeKV = await getEdgeKv()
+  const edgeKV = await getEdgeKv(env)
   const id = crypto.randomUUID()
   const now = new Date().toISOString()
 
@@ -256,8 +283,8 @@ async function handleCreateStaff(request) {
   return json({ id, staff: { id, ...staff } }, { status: 201 })
 }
 
-async function handleUpdateStaff(request, id) {
-  const auth = await requireAdmin(request)
+async function handleUpdateStaff(request, env, id) {
+  const auth = await requireAdmin(request, env)
   if (!auth.ok) return auth.response
 
   const body = await readJsonBody(request)
@@ -266,7 +293,7 @@ async function handleUpdateStaff(request, id) {
   const normalized = normalizeStaffInput(body.data)
   if (!normalized.ok) return badRequest(normalized.error)
 
-  const edgeKV = await getEdgeKv()
+  const edgeKV = await getEdgeKv(env)
   const existing = await edgeKV.get(staffKey(id), { type: 'json' })
   if (!existing) return notFound()
 
@@ -283,11 +310,11 @@ async function handleUpdateStaff(request, id) {
   return json({ staff: { id, ...updated } })
 }
 
-async function handleDeleteStaff(request, id) {
-  const auth = await requireAdmin(request)
+async function handleDeleteStaff(request, env, id) {
+  const auth = await requireAdmin(request, env)
   if (!auth.ok) return auth.response
 
-  const edgeKV = await getEdgeKv()
+  const edgeKV = await getEdgeKv(env)
   const ok = await edgeKV.delete(staffKey(id))
   if (!ok) return notFound()
 
@@ -296,31 +323,30 @@ async function handleDeleteStaff(request, id) {
   return json({ ok: true })
 }
 
-async function routeApi(request) {
+async function routeApi(request, env) {
   const url = new URL(request.url)
   const pathname = url.pathname
 
   if (pathname === '/api/health') return text('ok')
 
-  if (pathname === '/api/admin/login' && request.method === 'POST') return handleAdminLogin(request)
-  if (pathname === '/api/staff' && request.method === 'GET') return handleListStaff()
-  if (pathname === '/api/staff' && request.method === 'POST') return handleCreateStaff(request)
+  if (pathname === '/api/admin/login' && request.method === 'POST') return handleAdminLogin(request, env)
+  if (pathname === '/api/staff' && request.method === 'GET') return handleListStaff(env)
+  if (pathname === '/api/staff' && request.method === 'POST') return handleCreateStaff(request, env)
 
   const match = pathname.match(/^\/api\/staff\/([^/]+)$/)
   if (match) {
     const id = match[1]
-    if (request.method === 'PUT') return handleUpdateStaff(request, id)
-    if (request.method === 'DELETE') return handleDeleteStaff(request, id)
+    if (request.method === 'PUT') return handleUpdateStaff(request, env, id)
+    if (request.method === 'DELETE') return handleDeleteStaff(request, env, id)
   }
 
   return notFound()
 }
 
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     const url = new URL(request.url)
-    if (url.pathname.startsWith('/api/')) return routeApi(request)
+    if (url.pathname.startsWith('/api/')) return routeApi(request, env)
     return notFound()
   },
 }
-

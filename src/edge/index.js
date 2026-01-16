@@ -3,6 +3,7 @@ const DEFAULT_ADMIN_PASSWORD = ''
 const DEFAULT_TOKEN_SECRET = ''
 
 const STAFF_INDEX_KEY = 'staff_index'
+const ADMIN_CONFIG_KEY = 'admin_config'
 const MAX_BODY_BYTES = 2_000_000
 
 function normalizeEnvValue(v) {
@@ -193,6 +194,45 @@ function staffKey(id) {
   return `staff_${id}`
 }
 
+async function hashPassword(password) {
+  const bytes = new TextEncoder().encode(password)
+  const digest = await crypto.subtle.digest('SHA-256', bytes)
+  return base64UrlEncode(new Uint8Array(digest))
+}
+
+function randomTokenSecret() {
+  const bytes = new Uint8Array(32)
+  crypto.getRandomValues(bytes)
+  return base64UrlEncode(bytes)
+}
+
+async function loadAdminConfig(edgeKV) {
+  const value = await edgeKV.get(ADMIN_CONFIG_KEY, { type: 'json' })
+  if (!value || typeof value !== 'object') return null
+  const passwordHash = typeof value.passwordHash === 'string' ? value.passwordHash : ''
+  const tokenSecret = typeof value.tokenSecret === 'string' ? value.tokenSecret : ''
+  if (!passwordHash || !tokenSecret) return null
+  return { passwordHash, tokenSecret }
+}
+
+async function ensureAdminConfig(edgeKV, password) {
+  const existing = await loadAdminConfig(edgeKV)
+  const passwordHash = await hashPassword(password)
+  if (existing && existing.passwordHash) {
+    if (passwordHash !== existing.passwordHash) return { ok: false }
+    return { ok: true, tokenSecret: existing.tokenSecret }
+  }
+  const tokenSecret = randomTokenSecret()
+  await edgeKV.put(
+    ADMIN_CONFIG_KEY,
+    JSON.stringify({
+      passwordHash,
+      tokenSecret,
+    }),
+  )
+  return { ok: true, tokenSecret }
+}
+
 async function getEdgeKv(env) {
   return new EdgeKV({ namespace: getKvNamespace(env) })
 }
@@ -260,18 +300,10 @@ async function handleAdminLogin(request, env) {
 
   const password = typeof body.data.password === 'string' ? body.data.password.trim() : ''
   if (!password) return badRequest('password_required')
-  const adminPassword = String(getAdminPassword(env) || '').trim()
-  if (!adminPassword) {
-    return unauthorized('admin_password_not_configured')
-  }
-  if (password !== adminPassword) {
-    return unauthorized('invalid_password')
-  }
-
-  const tokenSecret = String(getTokenSecret(env) || '').trim()
-  if (!tokenSecret) {
-    return unauthorized('token_secret_not_configured')
-  }
+  const edgeKV = await getEdgeKv(env)
+  const result = await ensureAdminConfig(edgeKV, password)
+  if (!result.ok) return unauthorized('invalid_password')
+  const tokenSecret = result.tokenSecret
   const token = await signToken(tokenSecret, { role: 'admin', exp: Date.now() + 7 * 24 * 60 * 60 * 1000 })
   return json({ token })
 }
@@ -297,7 +329,9 @@ async function handleListStaff(env) {
 async function requireAdmin(request, env) {
   const token = getBearerToken(request)
   if (!token) return { ok: false, response: unauthorized() }
-  const tokenSecret = String(getTokenSecret(env) || '').trim()
+  const edgeKV = await getEdgeKv(env)
+  const config = await loadAdminConfig(edgeKV)
+  const tokenSecret = config && typeof config.tokenSecret === 'string' ? config.tokenSecret.trim() : ''
   if (!tokenSecret) return { ok: false, response: unauthorized('token_secret_not_configured') }
   const verified = await verifyToken(tokenSecret, token)
   if (!verified.ok) return { ok: false, response: unauthorized() }

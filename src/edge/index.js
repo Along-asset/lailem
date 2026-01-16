@@ -1,5 +1,5 @@
 const DEFAULT_KV_NAMESPACE = 'lailem_staff'
-const DEFAULT_ADMIN_PASSWORD = 'admin'
+const DEFAULT_ADMIN_PASSWORD = ''
 const DEFAULT_TOKEN_SECRET = 'change_me_in_esa_env'
 
 const STAFF_INDEX_KEY = 'staff_index'

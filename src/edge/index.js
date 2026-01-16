@@ -190,8 +190,22 @@ function getBearerToken(request) {
   return match ? match[1] : null
 }
 
-function staffKey(id) {
-  return `staff_${id}`
+function getTenantIdFromRequest(request) {
+  const url = new URL(request.url)
+  const host = url.hostname || 'default'
+  return host.toLowerCase()
+}
+
+function staffIndexKey(tenantId) {
+  return `${tenantId}_${STAFF_INDEX_KEY}`
+}
+
+function staffKey(tenantId, id) {
+  return `${tenantId}_staff_${id}`
+}
+
+function adminConfigKey(tenantId) {
+  return `${tenantId}_${ADMIN_CONFIG_KEY}`
 }
 
 async function hashPassword(password) {
@@ -206,8 +220,8 @@ function randomTokenSecret() {
   return base64UrlEncode(bytes)
 }
 
-async function loadAdminConfig(edgeKV) {
-  const value = await edgeKV.get(ADMIN_CONFIG_KEY, { type: 'json' })
+async function loadAdminConfig(edgeKV, tenantId) {
+  const value = await edgeKV.get(adminConfigKey(tenantId), { type: 'json' })
   if (!value || typeof value !== 'object') return null
   const passwordHash = typeof value.passwordHash === 'string' ? value.passwordHash : ''
   const tokenSecret = typeof value.tokenSecret === 'string' ? value.tokenSecret : ''
@@ -215,8 +229,8 @@ async function loadAdminConfig(edgeKV) {
   return { passwordHash, tokenSecret }
 }
 
-async function ensureAdminConfig(edgeKV, password) {
-  const existing = await loadAdminConfig(edgeKV)
+async function ensureAdminConfig(edgeKV, tenantId, password) {
+  const existing = await loadAdminConfig(edgeKV, tenantId)
   const passwordHash = await hashPassword(password)
   if (existing && existing.passwordHash) {
     if (passwordHash !== existing.passwordHash) return { ok: false }
@@ -224,7 +238,7 @@ async function ensureAdminConfig(edgeKV, password) {
   }
   const tokenSecret = randomTokenSecret()
   await edgeKV.put(
-    ADMIN_CONFIG_KEY,
+    adminConfigKey(tenantId),
     JSON.stringify({
       passwordHash,
       tokenSecret,
@@ -237,14 +251,14 @@ async function getEdgeKv(env) {
   return new EdgeKV({ namespace: getKvNamespace(env) })
 }
 
-async function getStaffIndex(edgeKV) {
-  const value = await edgeKV.get(STAFF_INDEX_KEY, { type: 'json' })
+async function getStaffIndex(edgeKV, tenantId) {
+  const value = await edgeKV.get(staffIndexKey(tenantId), { type: 'json' })
   if (!Array.isArray(value)) return []
   return value.filter((x) => typeof x === 'string')
 }
 
-async function setStaffIndex(edgeKV, ids) {
-  await edgeKV.put(STAFF_INDEX_KEY, JSON.stringify(ids))
+async function setStaffIndex(edgeKV, tenantId, ids) {
+  await edgeKV.put(staffIndexKey(tenantId), JSON.stringify(ids))
 }
 
 function normalizeStaffInput(input) {
@@ -300,20 +314,22 @@ async function handleAdminLogin(request, env) {
 
   const password = typeof body.data.password === 'string' ? body.data.password.trim() : ''
   if (!password) return badRequest('password_required')
+  const tenantId = getTenantIdFromRequest(request)
   const edgeKV = await getEdgeKv(env)
-  const result = await ensureAdminConfig(edgeKV, password)
+  const result = await ensureAdminConfig(edgeKV, tenantId, password)
   if (!result.ok) return unauthorized('invalid_password')
   const tokenSecret = result.tokenSecret
   const token = await signToken(tokenSecret, { role: 'admin', exp: Date.now() + 7 * 24 * 60 * 60 * 1000 })
   return json({ token })
 }
 
-async function handleListStaff(env) {
+async function handleListStaff(request, env) {
+  const tenantId = getTenantIdFromRequest(request)
   const edgeKV = await getEdgeKv(env)
-  const ids = await getStaffIndex(edgeKV)
+  const ids = await getStaffIndex(edgeKV, tenantId)
   const staffItems = await Promise.all(
     ids.map(async (id) => {
-      const v = await edgeKV.get(staffKey(id), { type: 'json' })
+      const v = await edgeKV.get(staffKey(tenantId, id), { type: 'json' })
       if (!v || typeof v !== 'object') return null
       return { id, ...v }
     }),
@@ -330,7 +346,8 @@ async function requireAdmin(request, env) {
   const token = getBearerToken(request)
   if (!token) return { ok: false, response: unauthorized() }
   const edgeKV = await getEdgeKv(env)
-  const config = await loadAdminConfig(edgeKV)
+  const tenantId = getTenantIdFromRequest(request)
+  const config = await loadAdminConfig(edgeKV, tenantId)
   const tokenSecret = config && typeof config.tokenSecret === 'string' ? config.tokenSecret.trim() : ''
   if (!tokenSecret) return { ok: false, response: unauthorized('token_secret_not_configured') }
   const verified = await verifyToken(tokenSecret, token)
@@ -342,6 +359,7 @@ async function handleCreateStaff(request, env) {
   const auth = await requireAdmin(request, env)
   if (!auth.ok) return auth.response
 
+  const tenantId = getTenantIdFromRequest(request)
   const body = await readJsonBody(request)
   if (!body.ok) return body.error === 'payload_too_large' ? tooLarge() : badRequest(body.error)
 
@@ -353,12 +371,12 @@ async function handleCreateStaff(request, env) {
   const now = new Date().toISOString()
 
   const staff = { ...normalized.staff, createdAt: now, updatedAt: now }
-  await edgeKV.put(staffKey(id), JSON.stringify(staff))
+  await edgeKV.put(staffKey(tenantId, id), JSON.stringify(staff))
 
-  const ids = await getStaffIndex(edgeKV)
+  const ids = await getStaffIndex(edgeKV, tenantId)
   if (!ids.includes(id)) {
     ids.push(id)
-    await setStaffIndex(edgeKV, ids)
+    await setStaffIndex(edgeKV, tenantId, ids)
   }
 
   return json({ id, staff: { id, ...staff } }, { status: 201 })
@@ -368,6 +386,7 @@ async function handleUpdateStaff(request, env, id) {
   const auth = await requireAdmin(request, env)
   if (!auth.ok) return auth.response
 
+  const tenantId = getTenantIdFromRequest(request)
   const body = await readJsonBody(request)
   if (!body.ok) return body.error === 'payload_too_large' ? tooLarge() : badRequest(body.error)
 
@@ -375,17 +394,17 @@ async function handleUpdateStaff(request, env, id) {
   if (!normalized.ok) return badRequest(normalized.error)
 
   const edgeKV = await getEdgeKv(env)
-  const existing = await edgeKV.get(staffKey(id), { type: 'json' })
+  const existing = await edgeKV.get(staffKey(tenantId, id), { type: 'json' })
   if (!existing) return notFound()
 
   const now = new Date().toISOString()
   const updated = { ...existing, ...normalized.staff, updatedAt: now }
-  await edgeKV.put(staffKey(id), JSON.stringify(updated))
+  await edgeKV.put(staffKey(tenantId, id), JSON.stringify(updated))
 
-  const ids = await getStaffIndex(edgeKV)
+  const ids = await getStaffIndex(edgeKV, tenantId)
   if (!ids.includes(id)) {
     ids.push(id)
-    await setStaffIndex(edgeKV, ids)
+    await setStaffIndex(edgeKV, tenantId, ids)
   }
 
   return json({ staff: { id, ...updated } })
@@ -395,12 +414,13 @@ async function handleDeleteStaff(request, env, id) {
   const auth = await requireAdmin(request, env)
   if (!auth.ok) return auth.response
 
+  const tenantId = getTenantIdFromRequest(request)
   const edgeKV = await getEdgeKv(env)
-  const ok = await edgeKV.delete(staffKey(id))
+  const ok = await edgeKV.delete(staffKey(tenantId, id))
   if (!ok) return notFound()
 
-  const ids = (await getStaffIndex(edgeKV)).filter((x) => x !== id)
-  await setStaffIndex(edgeKV, ids)
+  const ids = (await getStaffIndex(edgeKV, tenantId)).filter((x) => x !== id)
+  await setStaffIndex(edgeKV, tenantId, ids)
   return json({ ok: true })
 }
 
@@ -411,7 +431,7 @@ async function routeApi(request, env) {
   if (pathname === '/api/health') return text('ok')
 
   if (pathname === '/api/admin/login' && request.method === 'POST') return handleAdminLogin(request, env)
-  if (pathname === '/api/staff' && request.method === 'GET') return handleListStaff(env)
+  if (pathname === '/api/staff' && request.method === 'GET') return handleListStaff(request, env)
   if (pathname === '/api/staff' && request.method === 'POST') return handleCreateStaff(request, env)
 
   const match = pathname.match(/^\/api\/staff\/([^/]+)$/)

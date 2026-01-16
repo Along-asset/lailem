@@ -16,58 +16,40 @@ function normalizeEnvValue(v) {
 }
 
 function readEnvValue(env, key) {
-  const seen = new Set()
-
-  function readFromObjectLike(obj, k) {
-    if (!obj || (typeof obj !== 'object' && typeof obj !== 'function')) return null
-    if (k in obj) return normalizeEnvValue(obj[k])
-    if (typeof obj.get === 'function') {
-      try {
-        return normalizeEnvValue(obj.get(k))
-      } catch {
-        return null
-      }
+  function normalizeEnvValue(value) {
+    if (value == null) return null
+    if (typeof value === 'string') return value
+    if (typeof value.toString === 'function') {
+      const str = value.toString()
+      if (str !== '[object Object]') return str
     }
-    return null
+    try {
+      return JSON.stringify(value)
+    } catch {
+      return null
+    }
   }
 
-  function visit(obj, depth) {
-    if (!obj || (typeof obj !== 'object' && typeof obj !== 'function')) return null
-    if (seen.has(obj)) return null
-    seen.add(obj)
-
-    const direct = readFromObjectLike(obj, key)
-    if (direct != null) return direct
-    if (depth <= 0) return null
-
-    const containerKeys = [
-      'env',
-      'vars',
-      'variables',
-      'bindings',
-      'binding',
-      'context',
-      'ctx',
-      'config',
-      'cfg',
-      'settings',
-      'options',
-    ]
-    for (const ck of containerKeys) {
-      if (ck in obj) {
-        const nested = visit(obj[ck], depth - 1)
-        if (nested != null) return nested
-      }
-    }
-    return null
+  // Priority 1: Direct access on `env` (Cloudflare Workers style)
+  if (env && typeof env === 'object' && env[key] != null) {
+    return normalizeEnvValue(env[key])
   }
 
-  const fromEnv = visit(env, 3)
-  if (fromEnv != null) return fromEnv
+  // Priority 2: `process.env` (Node.js style)
+  if (typeof process !== 'undefined' && process.env && process.env[key] != null) {
+    return normalizeEnvValue(process.env[key])
+  }
 
-  if (typeof process !== 'undefined' && process && process.env) {
-    const fromProcessEnv = visit(process.env, 1)
-    if (fromProcessEnv != null) return fromProcessEnv
+  // Priority 3: Fallback to a deeper search for nested env objects.
+  if (env && typeof env === 'object') {
+    for (const prop in env) {
+      if (Object.prototype.hasOwnProperty.call(env, prop)) {
+        const nestedEnv = env[prop]
+        if (nestedEnv && typeof nestedEnv === 'object' && nestedEnv[key] != null) {
+          return normalizeEnvValue(nestedEnv[key])
+        }
+      }
+    }
   }
 
   return null

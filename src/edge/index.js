@@ -1,6 +1,6 @@
 const DEFAULT_KV_NAMESPACE = 'lailem_staff'
 const DEFAULT_ADMIN_PASSWORD = ''
-const DEFAULT_TOKEN_SECRET = 'change_me_in_esa_env'
+const DEFAULT_TOKEN_SECRET = ''
 
 const STAFF_INDEX_KEY = 'staff_index'
 const MAX_BODY_BYTES = 2_000_000
@@ -286,7 +286,10 @@ async function handleAdminLogin(request, env) {
     return unauthorized('invalid_password')
   }
 
-  const tokenSecret = String(getTokenSecret(env) || '')
+  const tokenSecret = String(getTokenSecret(env) || '').trim()
+  if (!tokenSecret) {
+    return unauthorized('token_secret_not_configured')
+  }
   const token = await signToken(tokenSecret, { role: 'admin', exp: Date.now() + 7 * 24 * 60 * 60 * 1000 })
   return json({ token })
 }
@@ -312,7 +315,9 @@ async function handleListStaff(env) {
 async function requireAdmin(request, env) {
   const token = getBearerToken(request)
   if (!token) return { ok: false, response: unauthorized() }
-  const verified = await verifyToken(String(getTokenSecret(env) || ''), token)
+  const tokenSecret = String(getTokenSecret(env) || '').trim()
+  if (!tokenSecret) return { ok: false, response: unauthorized('token_secret_not_configured') }
+  const verified = await verifyToken(tokenSecret, token)
   if (!verified.ok) return { ok: false, response: unauthorized() }
   return { ok: true }
 }

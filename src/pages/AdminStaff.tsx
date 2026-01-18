@@ -33,6 +33,8 @@ export default function AdminStaff() {
   const [skillsText, setSkillsText] = useState('')
   const [saving, setSaving] = useState(false)
   const [polishing, setPolishing] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState<Staff | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const sorted = useMemo(() => {
     return [...items].sort((a, b) => (b.sortOrder || 0) - (a.sortOrder || 0) || b.updatedAt.localeCompare(a.updatedAt))
@@ -273,22 +275,7 @@ export default function AdminStaff() {
                 <button className="button button--ghost" onClick={() => openEdit(s)}>
                   编辑
                 </button>
-                <button
-                  className="button button--danger"
-                  onClick={async () => {
-                    if (!confirm(`确认删除 ${s.name} 吗？`)) return
-                    try {
-                      if (!token) {
-                        setError('token_required')
-                        return
-                      }
-                      await apiDeleteStaff(token, s.id)
-                      setItems((prev) => prev.filter((x) => x.id !== s.id))
-                    } catch (e: unknown) {
-                      setError(e instanceof Error ? e.message : 'delete_failed')
-                    }
-                  }}
-                >
+                <button className="button button--danger" onClick={() => setConfirmDelete(s)}>
                   删除
                 </button>
               </div>
@@ -578,6 +565,53 @@ export default function AdminStaff() {
               </button>
               <button className="button button--primary" onClick={save} disabled={saving}>
                 {saving ? '提交中…' : '提交'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {confirmDelete ? (
+        <div className="confirm-modal-overlay" role="dialog" aria-modal="true">
+          <div className="confirm-modal">
+            <div className="confirm-modal__body">
+              <div className="confirm-modal__title">确认删除</div>
+              <div className="confirm-modal__text">
+                确认要删除 {confirmDelete.name} 吗？该操作无法撤销。
+              </div>
+            </div>
+            <div className="confirm-modal__foot">
+              <button
+                className="button button--ghost"
+                onClick={() => {
+                  if (deleting) return
+                  setConfirmDelete(null)
+                }}
+                disabled={deleting}
+              >
+                取消
+              </button>
+              <button
+                className="button button--danger"
+                onClick={async () => {
+                  if (!token) {
+                    setError('token_required')
+                    return
+                  }
+                  if (!confirmDelete) return
+                  setDeleting(true)
+                  try {
+                    await apiDeleteStaff(token, confirmDelete.id)
+                    setItems((prev) => prev.filter((x) => x.id !== confirmDelete.id))
+                    setConfirmDelete(null)
+                  } catch (e: unknown) {
+                    setError(e instanceof Error ? e.message : 'delete_failed')
+                  } finally {
+                    setDeleting(false)
+                  }
+                }}
+                disabled={deleting}
+              >
+                {deleting ? '删除中…' : '确认删除'}
               </button>
             </div>
           </div>

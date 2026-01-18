@@ -8,6 +8,7 @@ export default function AdminLogin() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
 
   return (
     <div className="page page--center">
@@ -18,20 +19,33 @@ export default function AdminLogin() {
         </div>
 
         <label className="field">
-          <div className="field__label">管理员口令</div>
-          <input
-            className="input"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="请输入管理员口令"
-          />
+          <div className="password-field">
+            <input
+              className="input password-field__input"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="请输入管理员口令"
+            />
+            <button
+              type="button"
+              className={`password-toggle${showPassword ? ' password-toggle--active' : ''}`}
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? '隐藏口令' : '查看口令'}
+            >
+              <span className="password-toggle__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M12 5C7 5 3.1 8.1 1.5 12c1.6 3.9 5.5 7 10.5 7s8.9-3.1 10.5-7C20.9 8.1 17 5 12 5zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8z" />
+                </svg>
+              </span>
+            </button>
+          </div>
         </label>
 
         {error ? <div className="hint hint--danger">{error}</div> : null}
 
         <button
-          className="button button--primary button--block"
+          className="button button--primary button--block button--auth-submit"
           disabled={loading || !password.trim()}
           onClick={async () => {
             setLoading(true)

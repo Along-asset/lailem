@@ -8,6 +8,14 @@ function staffAvatarSrc(staff: Staff): string | undefined {
   return undefined
 }
 
+function tagVariant(name: string): number {
+  let hash = 0
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash + name.charCodeAt(i)) % 6
+  }
+  return hash
+}
+
 export default function Home() {
   const [items, setItems] = useState<Staff[]>([])
   const [loading, setLoading] = useState(true)
@@ -127,11 +135,14 @@ export default function Home() {
                 {s.highlight ? <div className="card__highlight">{s.highlight}</div> : null}
                 {s.skills.length ? (
                   <div className="tags">
-                    {s.skills.slice(0, 6).map((t) => (
-                      <span key={t} className="tag">
-                        {t}
-                      </span>
-                    ))}
+                    {s.skills.slice(0, 6).map((t) => {
+                      const variant = tagVariant(t)
+                      return (
+                        <span key={t} className={`tag tag--variant-${variant}`}>
+                          {t}
+                        </span>
+                      )
+                    })}
                   </div>
                 ) : null}
               </div>

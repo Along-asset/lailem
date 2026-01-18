@@ -15,9 +15,9 @@ export function AppLayout() {
       <header className="topbar">
         <div className="topbar__inner">
           <Link to="/" className="brand">
-            <div className="brand__mark" aria-hidden />
+            <img className="brand__mark" src="/logo.png" alt="Lailem" />
             <div className="brand__text">
-              <div className="brand__name">月嫂人员管理</div>
+              <div className="brand__name">Lailem</div>
               <div className="brand__sub">Staff Directory</div>
             </div>
           </Link>
@@ -28,11 +28,11 @@ export function AppLayout() {
             </Link>
             {isAdmin ? (
               <>
-                <Link to="/admin/staff" className="nav__link">
+                <Link to="/admin/staff" className="nav__link nav__link--admin">
                   管理后台
                 </Link>
                 <button
-                  className="button button--ghost"
+                  className="button button--ghost nav__logout-button"
                   onClick={() => {
                     clearAdminToken()
                     window.location.href = '/'

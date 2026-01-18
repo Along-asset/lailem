@@ -8,11 +8,20 @@ function staffAvatarSrc(staff: Staff): string | undefined {
   return undefined
 }
 
+function tagVariant(name: string): number {
+  let hash = 0
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash + name.charCodeAt(i)) % 6
+  }
+  return hash
+}
+
 export default function StaffDetail() {
   const { id } = useParams<{ id: string }>()
   const [staff, setStaff] = useState<Staff | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
 
   useEffect(() => {
     if (!id) {
@@ -90,11 +99,14 @@ export default function StaffDetail() {
               <div className="staff-detail__section">
                 <div className="staff-detail__section-title">技能标签</div>
                 <div className="tags">
-                  {staff.skills.map((t) => (
-                    <span key={t} className="tag">
-                      {t}
-                    </span>
-                  ))}
+                  {staff.skills.map((t) => {
+                    const variant = tagVariant(t)
+                    return (
+                      <span key={t} className={`tag tag--variant-${variant}`}>
+                        {t}
+                      </span>
+                    )
+                  })}
                 </div>
               </div>
             ) : null}
@@ -111,9 +123,10 @@ export default function StaffDetail() {
                           {album.images.map((img, i) => (
                             <img
                               key={i}
-                              className="album-preview__img"
+                              className="album-preview__img album-preview__img--clickable"
                               src={img}
                               alt={`${staff.name}-album-${index}-${i}`}
+                              onClick={() => setPreviewImage(img)}
                             />
                           ))}
                         </div>
@@ -132,7 +145,12 @@ export default function StaffDetail() {
           </div>
         ) : null}
       </div>
+
+      {previewImage ? (
+        <div className="image-lightbox" onClick={() => setPreviewImage(null)}>
+          <img className="image-lightbox__img" src={previewImage} alt="preview" />
+        </div>
+      ) : null}
     </div>
   )
 }
-

@@ -66,15 +66,14 @@ body {
 }
 
 .brand__mark {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, rgba(78, 102, 255, 0.95), rgba(0, 199, 255, 0.75));
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35);
+  width: 44px;
+  height: 44px;
+  display: block;
+  object-fit: contain;
 }
 
 .brand__name {
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 650;
   letter-spacing: 0.2px;
 }
@@ -93,10 +92,15 @@ body {
 
 .nav__link {
   text-decoration: none;
-  font-size: 13px;
+  font-size: 18px;
   color: rgba(255, 255, 255, 0.72);
-  padding: 8px 10px;
+  padding: 6px 28px;
+  letter-spacing: 0.16em;
   border-radius: 10px;
+}
+
+.nav__link--admin {
+  letter-spacing: 0.08em;
 }
 
 .nav__link:hover {
@@ -156,15 +160,15 @@ body {
 
 .hero__title {
   color: rgba(255, 255, 255, 0.92);
-  font-size: 22px;
+  font-size: 32px;
   font-weight: 680;
-  letter-spacing: 0.2px;
+  letter-spacing: 2px;
 }
 
 .hero__sub {
   color: rgba(255, 255, 255, 0.6);
-  font-size: 13px;
-  margin-top: 6px;
+  font-size: 14px;
+  margin-top: 4px;
 }
 
 .panel--auth {
@@ -197,9 +201,9 @@ body {
   width: 54px;
   height: 54px;
   border-radius: 999px;
-  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  border: 2px solid rgba(173, 173, 173, 0.5);
   background: transparent;
-  color: rgba(255, 255, 255, 0.88);
+  color: rgba(173, 173, 173, 0.5);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -258,15 +262,15 @@ body {
   z-index: 2;
   width: 100%;
   text-align: center;
-  padding: 0 24px 14%;
+  padding: 0 20px 5%;
 }
 
 .hero--cover .hero__title {
-  font-size: 30px;
+  font-size: 70px;
 }
 
 .hero--cover .hero__sub {
-  font-size: 14px;
+  font-size: 18px;
 }
 
 .panel {
@@ -297,9 +301,10 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(15, 20, 34, 0.55);
   color: rgba(255, 255, 255, 0.88);
-  padding: 10px 12px;
-  font-size: 13px;
+  padding: 14px 12px;
+  font-size: 14px;
   outline: none;
+  font-family: inherit;
 }
 
 .textarea {
@@ -310,9 +315,119 @@ body {
   color: rgba(255, 255, 255, 0.45);
 }
 
+.number-input {
+  position: relative;
+}
+
+.number-input__field {
+  padding-right: 40px;
+  -moz-appearance: textfield;
+}
+
+.number-input__field::-webkit-outer-spin-button,
+.number-input__field::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.number-input__buttons {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  bottom: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.number-input__btn {
+  width: 22px;
+  flex: 1 1 0;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 10px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+}
+
+.number-input__btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.input[type='file']::file-selector-button {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.86);
+  border-radius: 999px;
+  padding: 6px 16px;
+  margin-right: 10px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.input[type='file']::-webkit-file-upload-button {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.86);
+  border-radius: 999px;
+  padding: 6px 16px;
+  margin-right: 10px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.input[type='password']::-ms-reveal,
+.input[type='password']::-ms-clear {
+  display: none;
+}
+
+.password-field {
+  position: relative;
+}
+
+.password-field__input {
+  padding-right: 44px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+}
+
+.password-toggle__icon svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+  fill: currentColor;
+}
+
+.password-toggle--active {
+  color: rgba(117, 255, 167, 0.95);
+  border-color: rgba(117, 255, 167, 0.7);
+}
+
 .hint {
   color: rgba(255, 255, 255, 0.6);
-  font-size: 13px;
+  font-size: 14px;
   padding: 10px 2px;
 }
 
@@ -325,9 +440,16 @@ body {
   background: rgba(255, 255, 255, 0.06);
   color: rgba(255, 255, 255, 0.86);
   border-radius: 12px;
-  padding: 9px 12px;
-  font-size: 13px;
+  padding: 6px 14px;
+  font-size: 18px;
+  margin-top: 0;
+   font-family: inherit;
   cursor: pointer;
+  text-decoration: none;
+}
+
+.button--auth-submit {
+  margin-top: 20px;
 }
 
 .button:hover {
@@ -350,6 +472,10 @@ body {
 
 .button--ghost {
   background: transparent;
+}
+
+.nav__logout-button {
+  letter-spacing: 0.24em;
 }
 
 .button--danger {
@@ -484,6 +610,42 @@ body {
   background: rgba(255, 255, 255, 0.03);
 }
 
+.tag--variant-0 {
+  border-color: rgba(78, 102, 255, 0.4);
+  background: rgba(78, 102, 255, 0.18);
+  color: rgba(222, 231, 255, 0.96);
+}
+
+.tag--variant-1 {
+  border-color: rgba(0, 199, 255, 0.4);
+  background: rgba(0, 199, 255, 0.16);
+  color: rgba(210, 245, 255, 0.96);
+}
+
+.tag--variant-2 {
+  border-color: rgba(117, 255, 167, 0.4);
+  background: rgba(117, 255, 167, 0.18);
+  color: rgba(215, 255, 230, 0.96);
+}
+
+.tag--variant-3 {
+  border-color: rgba(255, 204, 102, 0.5);
+  background: rgba(255, 204, 102, 0.2);
+  color: rgba(255, 244, 214, 0.96);
+}
+
+.tag--variant-4 {
+  border-color: rgba(255, 153, 204, 0.45);
+  background: rgba(255, 153, 204, 0.22);
+  color: rgba(255, 230, 244, 0.96);
+}
+
+.tag--variant-5 {
+  border-color: rgba(178, 102, 255, 0.5);
+  background: rgba(178, 102, 255, 0.22);
+  color: rgba(241, 225, 255, 0.96);
+}
+
 .table {
   display: flex;
   flex-direction: column;
@@ -501,7 +663,8 @@ body {
 .table__head {
   padding: 10px 10px 8px;
   color: rgba(255, 255, 255, 0.58);
-  font-size: 12px;
+  font-size: 16px;
+  letter-spacing: 0.48em;
 }
 
 .table__row {
@@ -509,6 +672,7 @@ body {
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.03);
+  color: #fff;
 }
 
 .table__right {
@@ -540,13 +704,13 @@ body {
 }
 
 .row-person__name {
-  color: rgba(255, 255, 255, 0.9);
+  color: #fff;
   font-weight: 650;
   font-size: 13px;
 }
 
 .row-person__sub {
-  color: rgba(255, 255, 255, 0.55);
+  color: #fff;
   font-size: 12px;
   margin-top: 2px;
 }
@@ -593,6 +757,7 @@ body {
 .drawer__title {
   color: rgba(255, 255, 255, 0.9);
   font-weight: 680;
+  font-size: 20px;
 }
 
 .drawer__body {
@@ -608,7 +773,7 @@ body {
 }
 
 .field__label {
-  font-size: 12px;
+  font-size: 14px;
   color: rgba(255, 255, 255, 0.6);
 }
 
@@ -636,6 +801,39 @@ body {
   display: block;
 }
 
+.album-upload {
+  position: relative;
+  display: inline-block;
+}
+
+.album-upload__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.album-upload__box {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.03);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: rgba(255, 255, 255, 0.78);
+  cursor: pointer;
+}
+
+.album-upload__box:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .album-preview {
   display: flex;
   flex-wrap: wrap;
@@ -651,6 +849,31 @@ body {
   display: block;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.03);
+}
+
+.album-preview__img--clickable {
+  cursor: zoom-in;
+}
+
+.image-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.image-lightbox__img {
+  max-width: min(960px, 100%);
+  max-height: calc(100vh - 80px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.9);
+  object-fit: contain;
+  display: block;
 }
 
 .staff-detail {

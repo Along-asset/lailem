@@ -91,7 +91,7 @@ export default function AdminStaff() {
 
   function applySkills(text: string) {
     const arr = text
-      .split(/[，,、\n]/g)
+      .split(/[，,、\s]+/g)
       .map((s) => s.trim())
       .filter(Boolean)
       .slice(0, 16)
@@ -330,14 +330,42 @@ export default function AdminStaff() {
 
                 <label className="field">
                   <div className="field__label">从业年限</div>
-                  <input
-                    className="input"
-                    type="number"
-                    min={0}
-                    max={80}
-                    value={form.years}
-                    onChange={(e) => setForm((p) => ({ ...p, years: Number(e.target.value || 0) }))}
-                  />
+                  <div className="number-input">
+                    <input
+                      className="input number-input__field"
+                      type="number"
+                      min={0}
+                      max={80}
+                      value={form.years}
+                      onChange={(e) => setForm((p) => ({ ...p, years: Number(e.target.value || 0) }))}
+                    />
+                    <div className="number-input__buttons">
+                      <button
+                        type="button"
+                        className="number-input__btn"
+                        onClick={() =>
+                          setForm((p) => {
+                            const next = Math.min((p.years || 0) + 1, 80)
+                            return { ...p, years: next }
+                          })
+                        }
+                      >
+                        ▲
+                      </button>
+                      <button
+                        type="button"
+                        className="number-input__btn"
+                        onClick={() =>
+                          setForm((p) => {
+                            const next = Math.max((p.years || 0) - 1, 0)
+                            return { ...p, years: next }
+                          })
+                        }
+                      >
+                        ▼
+                      </button>
+                    </div>
+                  </div>
                 </label>
 
                 <label className="field">
@@ -366,7 +394,7 @@ export default function AdminStaff() {
                 </label>
 
                 <label className="field field--full">
-                  <div className="field__label">技能标签（用逗号分隔）</div>
+                  <div className="field__label">技能标签（可以用逗号、顿号、空格分隔）</div>
                   <input
                     className="input"
                     value={skillsText}
@@ -374,7 +402,7 @@ export default function AdminStaff() {
                       setSkillsText(e.target.value)
                       applySkills(e.target.value)
                     }}
-                    placeholder="如：月子餐, 早教, 产后恢复"
+                    placeholder="如：月子餐, 早教、产后恢复 月子中心"
                   />
                 </label>
 
@@ -403,12 +431,42 @@ export default function AdminStaff() {
 
                 <label className="field">
                   <div className="field__label">排序权重</div>
-                  <input
-                    className="input"
-                    type="number"
-                    value={form.sortOrder}
-                    onChange={(e) => setForm((p) => ({ ...p, sortOrder: Number(e.target.value || 0) }))}
-                  />
+                  <div className="number-input">
+                    <input
+                      className="input number-input__field"
+                      type="number"
+                      min={0}
+                      max={9999}
+                      value={form.sortOrder}
+                      onChange={(e) => setForm((p) => ({ ...p, sortOrder: Number(e.target.value || 0) }))}
+                    />
+                    <div className="number-input__buttons">
+                      <button
+                        type="button"
+                        className="number-input__btn"
+                        onClick={() =>
+                          setForm((p) => {
+                            const next = Math.min((p.sortOrder || 0) + 1, 9999)
+                            return { ...p, sortOrder: next }
+                          })
+                        }
+                      >
+                        ▲
+                      </button>
+                      <button
+                        type="button"
+                        className="number-input__btn"
+                        onClick={() =>
+                          setForm((p) => {
+                            const next = Math.max((p.sortOrder || 0) - 1, 0)
+                            return { ...p, sortOrder: next }
+                          })
+                        }
+                      >
+                        ▼
+                      </button>
+                    </div>
+                  </div>
                 </label>
 
                 <label className="field">
@@ -453,48 +511,47 @@ export default function AdminStaff() {
                         onChange={(e) => updateAlbumTitle(index, e.target.value)}
                       />
                     </div>
-                    <div className="field">
-                      <input
-                        className="input"
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={async (e) => {
-                          const files = e.target.files
-                          if (!files || files.length === 0) return
-                          try {
-                            const images: string[] = []
-                            const maxFiles = Math.min(files.length, 6)
-                            for (let i = 0; i < maxFiles; i++) {
-                              const dataUrl = await fileToCompressedDataUrl(files[i], {
-                                maxSize: 640,
-                                quality: 0.8,
-                                maxBytes: 900_000,
+                    <div className="album-preview">
+                      {album.images.map((img, i) => (
+                        <img key={i} className="album-preview__img" src={img} alt={`album-${index}-${i}`} />
+                      ))}
+                      <label className="album-upload">
+                        <input
+                          className="album-upload__input"
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={async (e) => {
+                            const files = e.target.files
+                            if (!files || files.length === 0) return
+                            try {
+                              const images: string[] = []
+                              const maxFiles = Math.min(files.length, 6)
+                              for (let i = 0; i < maxFiles; i++) {
+                                const dataUrl = await fileToCompressedDataUrl(files[i], {
+                                  maxSize: 640,
+                                  quality: 0.8,
+                                  maxBytes: 900_000,
+                                })
+                                images.push(dataUrl)
+                              }
+                              setForm((p) => {
+                                const albums = p.albums ? [...p.albums] : []
+                                const current = albums[index] || { title: '', images: [] }
+                                const mergedImages = [...current.images, ...images].slice(0, 12)
+                                albums[index] = { ...current, images: mergedImages }
+                                return { ...p, albums }
                               })
-                              images.push(dataUrl)
+                            } catch (err: unknown) {
+                              setError(err instanceof Error ? err.message : 'image_failed')
+                            } finally {
+                              e.target.value = ''
                             }
-                            setForm((p) => {
-                              const albums = p.albums ? [...p.albums] : []
-                              const current = albums[index] || { title: '', images: [] }
-                              const mergedImages = [...current.images, ...images].slice(0, 12)
-                              albums[index] = { ...current, images: mergedImages }
-                              return { ...p, albums }
-                            })
-                          } catch (err: unknown) {
-                            setError(err instanceof Error ? err.message : 'image_failed')
-                          } finally {
-                            e.target.value = ''
-                          }
-                        }}
-                      />
+                          }}
+                        />
+                        <span className="album-upload__box">+</span>
+                      </label>
                     </div>
-                    {album.images.length ? (
-                      <div className="album-preview">
-                        {album.images.map((img, i) => (
-                          <img key={i} className="album-preview__img" src={img} alt={`album-${index}-${i}`} />
-                        ))}
-                      </div>
-                    ) : null}
                     <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
                       <button
                         type="button"

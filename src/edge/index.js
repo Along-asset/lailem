@@ -289,6 +289,23 @@ function normalizeStaffInput(input) {
     .filter(Boolean)
     .slice(0, 16)
 
+  const rawAlbums = Array.isArray(input.albums) ? input.albums : []
+  const safeAlbums = rawAlbums
+    .slice(0, 4)
+    .map((album) => {
+      if (!album || typeof album !== 'object') return null
+      const title = typeof album.title === 'string' ? album.title.trim() : ''
+      const images = Array.isArray(album.images) ? album.images : []
+      const safeImages = images
+        .filter((x) => typeof x === 'string')
+        .map((x) => x.trim())
+        .filter(Boolean)
+        .slice(0, 12)
+      if (!title && safeImages.length === 0) return null
+      return { title, images: safeImages }
+    })
+    .filter(Boolean)
+
   if (avatarData && avatarData.length > 1_200_000) return { ok: false, error: 'avatar_too_large' }
 
   return {
@@ -304,6 +321,7 @@ function normalizeStaffInput(input) {
       status,
       avatarData,
       avatarUrl,
+      albums: safeAlbums,
     },
   }
 }
@@ -424,6 +442,14 @@ async function handleDeleteStaff(request, env, id) {
   return json({ ok: true })
 }
 
+async function handleGetStaff(request, env, id) {
+  const tenantId = getTenantIdFromRequest(request)
+  const edgeKV = await getEdgeKv(env)
+  const existing = await edgeKV.get(staffKey(tenantId, id), { type: 'json' })
+  if (!existing || typeof existing !== 'object') return notFound()
+  return json({ staff: { id, ...existing } })
+}
+
 async function routeApi(request, env) {
   const url = new URL(request.url)
   const pathname = url.pathname
@@ -437,6 +463,7 @@ async function routeApi(request, env) {
   const match = pathname.match(/^\/api\/staff\/([^/]+)$/)
   if (match) {
     const id = match[1]
+    if (request.method === 'GET') return handleGetStaff(request, env, id)
     if (request.method === 'PUT') return handleUpdateStaff(request, env, id)
     if (request.method === 'DELETE') return handleDeleteStaff(request, env, id)
   }

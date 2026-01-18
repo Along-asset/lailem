@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { apiListStaff, type Staff } from '../lib/api'
 
 function staffAvatarSrc(staff: Staff): string | undefined {
@@ -14,6 +15,7 @@ export default function Home() {
 
   const [q, setQ] = useState('')
   const [status, setStatus] = useState<'all' | 'available' | 'busy'>('all')
+  const [videoEnabled, setVideoEnabled] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -46,10 +48,31 @@ export default function Home() {
   }, [items, q, status])
 
   return (
-    <div className="page">
-      <div className="hero">
-        <div className="hero__title">工作人员展示</div>
-        <div className="hero__sub">公开展示员工信息，后台由管理员维护</div>
+    <div className="page page--home">
+      <div className="hero hero--cover">
+        {videoEnabled ? (
+          <video
+            className="hero__video"
+            src="/videos/hero-loop.mp4"
+            autoPlay
+            muted
+            loop
+            playsInline
+          />
+        ) : null}
+        <div className="hero__content">
+          <div className="hero__title">工作人员展示</div>
+          <div className="hero__sub">公开展示员工信息，后台由管理员维护</div>
+          {!videoEnabled ? (
+            <button
+              type="button"
+              className="hero__play"
+              onClick={() => setVideoEnabled(true)}
+            >
+              ▶
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <div className="panel">
@@ -85,7 +108,7 @@ export default function Home() {
 
         <div className="grid">
           {filtered.map((s) => (
-            <div key={s.id} className="card">
+            <Link key={s.id} to={`/staff/${encodeURIComponent(s.id)}`} className="card card--link">
               <div className="card__media">
                 {staffAvatarSrc(s) ? <img className="card__img" src={staffAvatarSrc(s)} alt={s.name} /> : null}
               </div>
@@ -112,7 +135,7 @@ export default function Home() {
                   </div>
                 ) : null}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

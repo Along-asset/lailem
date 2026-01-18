@@ -1,5 +1,10 @@
 export type StaffStatus = 'available' | 'busy'
 
+export type StaffAlbum = {
+  title: string
+  images: string[]
+}
+
 export type Staff = {
   id: string
   name: string
@@ -14,6 +19,7 @@ export type Staff = {
   avatarUrl: string
   createdAt: string
   updatedAt: string
+  albums?: StaffAlbum[]
 }
 
 export type StaffInput = {
@@ -27,6 +33,7 @@ export type StaffInput = {
   status: StaffStatus
   avatarData: string | null
   avatarUrl: string
+  albums?: StaffAlbum[]
 }
 
 type ApiError = { error: string }
@@ -72,6 +79,10 @@ export async function apiListStaff(): Promise<{ items: Staff[] }> {
   return requestJson<{ items: Staff[] }>('/api/staff')
 }
 
+export async function apiGetStaff(id: string): Promise<{ staff: Staff }> {
+  return requestJson<{ staff: Staff }>(`/api/staff/${encodeURIComponent(id)}`)
+}
+
 export async function apiCreateStaff(token: string, input: StaffInput): Promise<{ id: string; staff: Staff }> {
   return requestJson<{ id: string; staff: Staff }>(
     '/api/staff',
@@ -107,4 +118,3 @@ export async function apiDeleteStaff(token: string, id: string): Promise<{ ok: t
     token,
   )
 }
-

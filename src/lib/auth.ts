@@ -24,3 +24,11 @@ export function clearAdminToken() {
   }
 }
 
+export function isDevAdminBypass(): boolean {
+  if (typeof window === 'undefined') return false
+  const host = window.location.hostname
+  const search = window.location.search
+  const isLocalhost = host === 'localhost' || host === '127.0.0.1'
+  const hasFlag = search.includes('dev_admin=1')
+  return isLocalhost && hasFlag
+}

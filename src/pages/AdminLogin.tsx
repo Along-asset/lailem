@@ -10,13 +10,13 @@ export default function AdminLogin() {
   const [error, setError] = useState<string | null>(null)
 
   return (
-    <div className="page">
-      <div className="hero">
-        <div className="hero__title">管理员登录</div>
-        <div className="hero__sub">仅管理员可新增、编辑与删除人员信息</div>
-      </div>
+    <div className="page page--center">
+      <div className="panel panel--narrow panel--auth">
+        <div className="hero">
+          <div className="hero__title">管理员登录</div>
+          <div className="hero__sub">仅管理员可新增、编辑与删除人员信息</div>
+        </div>
 
-      <div className="panel panel--narrow">
         <label className="field">
           <div className="field__label">管理员口令</div>
           <input
@@ -53,4 +53,3 @@ export default function AdminLogin() {
     </div>
   )
 }
-

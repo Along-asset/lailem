@@ -1,8 +1,14 @@
-import { Link, Outlet } from 'react-router-dom'
-import { clearAdminToken, getAdminToken } from '../lib/auth'
+import { Link, Outlet, useLocation } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { clearAdminToken, getAdminToken, isDevAdminBypass } from '../lib/auth'
 
 export function AppLayout() {
-  const isAdmin = Boolean(getAdminToken())
+  const location = useLocation()
+  const [isAdmin, setIsAdmin] = useState(() => Boolean(getAdminToken()) || isDevAdminBypass())
+
+  useEffect(() => {
+    setIsAdmin(Boolean(getAdminToken()) || isDevAdminBypass())
+  }, [location])
 
   return (
     <div className="app-shell">
@@ -54,4 +60,3 @@ export function AppLayout() {
     </div>
   )
 }
-

@@ -766,6 +766,47 @@ body {
   overflow: auto;
 }
 
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+}
+
+.modal {
+  width: min(420px, 100% - 40px);
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: radial-gradient(circle at top, rgba(78, 102, 255, 0.14), transparent 55%),
+    rgba(11, 15, 25, 0.96);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  padding: 20px 20px 16px;
+}
+
+.modal__title {
+  font-size: 18px;
+  font-weight: 650;
+  color: rgba(255, 255, 255, 0.96);
+  margin-bottom: 10px;
+}
+
+.modal__body {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .field {
   display: flex;
   flex-direction: column;

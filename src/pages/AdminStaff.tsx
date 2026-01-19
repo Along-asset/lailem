@@ -32,6 +32,12 @@ export default function AdminStaff() {
   const [form, setForm] = useState<StaffInput>(emptyInput())
   const [skillsText, setSkillsText] = useState('')
   const [saving, setSaving] = useState(false)
+  const [confirmingId, setConfirmingId] = useState<string | null>(null)
+
+  const confirmingTarget = useMemo(
+    () => (confirmingId ? items.find((x) => x.id === confirmingId) ?? null : null),
+    [items, confirmingId],
+  )
   const [polishing, setPolishing] = useState(false)
 
   const sorted = useMemo(() => {
@@ -273,22 +279,7 @@ export default function AdminStaff() {
                 <button className="button button--ghost" onClick={() => openEdit(s)}>
                   编辑
                 </button>
-                <button
-                  className="button button--danger"
-                  onClick={async () => {
-                    if (!confirm(`确认删除 ${s.name} 吗？`)) return
-                    try {
-                      if (!token) {
-                        setError('token_required')
-                        return
-                      }
-                      await apiDeleteStaff(token, s.id)
-                      setItems((prev) => prev.filter((x) => x.id !== s.id))
-                    } catch (e: unknown) {
-                      setError(e instanceof Error ? e.message : 'delete_failed')
-                    }
-                  }}
-                >
+                <button className="button button--danger" onClick={() => setConfirmingId(s.id)}>
                   删除
                 </button>
               </div>
@@ -578,6 +569,54 @@ export default function AdminStaff() {
               </button>
               <button className="button button--primary" onClick={save} disabled={saving}>
                 {saving ? '提交中…' : '提交'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {confirmingId ? (
+        <div className="modal-overlay" role="dialog" aria-modal="true">
+          <div className="modal">
+            <div className="modal__title">
+              确认删除{confirmingTarget ? `：${confirmingTarget.name}` : ''}
+            </div>
+            <div className="modal__body">
+              确定要删除「{confirmingTarget?.name ?? '该人员'}」吗？删除后将无法恢复，且首页将不再展示该人员信息。
+            </div>
+            <div className="modal__actions">
+              <button
+                className="button button--ghost"
+                onClick={() => setConfirmingId(null)}
+                disabled={saving}
+              >
+                取消
+              </button>
+              <button
+                className="button button--danger"
+                onClick={async () => {
+                  if (!confirmingTarget) {
+                    setConfirmingId(null)
+                    return
+                  }
+                  try {
+                    if (!token) {
+                      setError('token_required')
+                      return
+                    }
+                    setSaving(true)
+                    await apiDeleteStaff(token, confirmingTarget.id)
+                    setItems((prev) => prev.filter((x) => x.id !== confirmingTarget.id))
+                    setConfirmingId(null)
+                  } catch (e: unknown) {
+                    setError(e instanceof Error ? e.message : 'delete_failed')
+                  } finally {
+                    setSaving(false)
+                  }
+                }}
+                disabled={saving}
+              >
+                {saving ? '删除中…' : '确认删除'}
               </button>
             </div>
           </div>

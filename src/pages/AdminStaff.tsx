@@ -3,11 +3,14 @@ import { Navigate } from 'react-router-dom'
 import { apiCreateStaff, apiDeleteStaff, apiListStaff, apiUpdateStaff, type Staff, type StaffInput } from '../lib/api'
 import { getAdminToken, isDevAdminBypass } from '../lib/auth'
 import { fileToCompressedDataUrl } from '../lib/image'
+import { ShareButton } from '../ui/ShareButton'
 
 function emptyInput(): StaffInput {
   return {
     name: '',
     area: '',
+    age: 0,
+    nativePlace: '',
     highlight: '',
     bio: '',
     skills: [],
@@ -77,6 +80,8 @@ export default function AdminStaff() {
     setForm({
       name: staff.name,
       area: staff.area,
+      age: staff.age || 0,
+      nativePlace: staff.nativePlace || '',
       highlight: staff.highlight,
       bio: staff.bio,
       skills: staff.skills,
@@ -208,6 +213,7 @@ export default function AdminStaff() {
         ...form,
         name: form.name.trim(),
         area: form.area.trim(),
+        nativePlace: form.nativePlace.trim(),
         highlight: form.highlight.trim(),
         bio: form.bio.trim(),
         avatarUrl: form.avatarUrl.trim(),
@@ -248,15 +254,13 @@ export default function AdminStaff() {
         {error ? <div className="hint hint--danger">{error}</div> : null}
 
         <div className="table">
-          <div className="table__head">
+          <div className="table__head table__head--admin">
             <div>人员</div>
             <div>区域</div>
-            <div>状态</div>
-            <div>排序</div>
             <div className="table__right">操作</div>
           </div>
           {sorted.map((s) => (
-            <div key={s.id} className="table__row">
+            <div key={s.id} className="table__row table__row--admin">
               <div className="row-person">
                 <div className="avatar">
                   {s.avatarData || s.avatarUrl ? (
@@ -268,10 +272,9 @@ export default function AdminStaff() {
                   <div className="row-person__sub">{s.highlight || '—'}</div>
                 </div>
               </div>
-              <div>{s.area || '—'}</div>
-              <div>{s.status === 'available' ? '可接单' : '档期满'}</div>
-              <div>{s.sortOrder}</div>
-              <div className="table__right">
+              <div className="table__cell table__cell--area">{s.area || '—'}</div>
+              <div className="table__right table__right--admin">
+                <ShareButton staff={s} className="button button--ghost" label="分享" />
                 <button className="button button--ghost" onClick={() => openEdit(s)}>
                   编辑
                 </button>
@@ -314,6 +317,55 @@ export default function AdminStaff() {
                     placeholder="如：浦东 / 徐汇"
                   />
                 </label>
+                <label className="field">
+                  <div className="field__label">年龄</div>
+                  <div className="number-input">
+                    <input
+                      className="input number-input__field"
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={form.age}
+                      onChange={(e) => setForm((p) => ({ ...p, age: Number(e.target.value || 0) }))}
+                    />
+                    <div className="number-input__buttons">
+                      <button
+                        type="button"
+                        className="number-input__btn"
+                        onClick={() =>
+                          setForm((p) => {
+                            const next = Math.min((p.age || 0) + 1, 100)
+                            return { ...p, age: next }
+                          })
+                        }
+                      >
+                        ▲
+                      </button>
+                      <button
+                        type="button"
+                        className="number-input__btn"
+                        onClick={() =>
+                          setForm((p) => {
+                            const next = Math.max((p.age || 0) - 1, 0)
+                            return { ...p, age: next }
+                          })
+                        }
+                      >
+                        ▼
+                      </button>
+                    </div>
+                  </div>
+                </label>
+
+                <label className="field">
+                  <div className="field__label">籍贯</div>
+                  <input
+                    className="input"
+                    value={form.nativePlace}
+                    onChange={(e) => setForm((p) => ({ ...p, nativePlace: e.target.value }))}
+                    placeholder="如：湖北武汉"
+                  />
+                </label>
 
                 <label className="field">
                   <div className="field__label">从业年限</div>
@@ -354,22 +406,6 @@ export default function AdminStaff() {
                     </div>
                   </div>
                 </label>
-
-                <label className="field">
-                  <div className="field__label">状态</div>
-                  <select
-                    className="select"
-                    value={form.status}
-                    onChange={(e) => {
-                      const v = e.target.value
-                      if (v === 'available' || v === 'busy') setForm((p) => ({ ...p, status: v }))
-                    }}
-                  >
-                    <option value="available">可接单</option>
-                    <option value="busy">档期满</option>
-                  </select>
-                </label>
-
                 <label className="field field--full">
                   <div className="field__label">一句话亮点</div>
                   <input
@@ -415,47 +451,6 @@ export default function AdminStaff() {
                     rows={4}
                   />
                 </label>
-
-                <label className="field">
-                  <div className="field__label">排序权重</div>
-                  <div className="number-input">
-                    <input
-                      className="input number-input__field"
-                      type="number"
-                      min={0}
-                      max={9999}
-                      value={form.sortOrder}
-                      onChange={(e) => setForm((p) => ({ ...p, sortOrder: Number(e.target.value || 0) }))}
-                    />
-                    <div className="number-input__buttons">
-                      <button
-                        type="button"
-                        className="number-input__btn"
-                        onClick={() =>
-                          setForm((p) => {
-                            const next = Math.min((p.sortOrder || 0) + 1, 9999)
-                            return { ...p, sortOrder: next }
-                          })
-                        }
-                      >
-                        ▲
-                      </button>
-                      <button
-                        type="button"
-                        className="number-input__btn"
-                        onClick={() =>
-                          setForm((p) => {
-                            const next = Math.max((p.sortOrder || 0) - 1, 0)
-                            return { ...p, sortOrder: next }
-                          })
-                        }
-                      >
-                        ▼
-                      </button>
-                    </div>
-                  </div>
-                </label>
-
                 <label className="field">
                   <div className="field__label">头像（上传）</div>
                   <input

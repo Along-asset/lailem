@@ -4,8 +4,13 @@ import Home from './pages/Home'
 import AdminLogin from './pages/AdminLogin'
 import AdminStaff from './pages/AdminStaff'
 import StaffDetail from './pages/StaffDetail'
+import StaffShare from './pages/StaffShare'
 
 export const router = createBrowserRouter([
+  {
+    path: '/share/staff/:id',
+    element: <StaffShare />,
+  },
   {
     element: <AppLayout />,
     children: [

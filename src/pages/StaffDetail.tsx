@@ -1,20 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { apiGetStaff, type Staff } from '../lib/api'
-
-function staffAvatarSrc(staff: Staff): string | undefined {
-  if (staff.avatarData) return staff.avatarData
-  if (staff.avatarUrl) return staff.avatarUrl
-  return undefined
-}
-
-function tagVariant(name: string): number {
-  let hash = 0
-  for (let i = 0; i < name.length; i++) {
-    hash = (hash + name.charCodeAt(i)) % 6
-  }
-  return hash
-}
+import { staffAvatarSrc, tagVariant } from '../lib/staff'
+import { ShareButton } from '../ui/ShareButton'
 
 export default function StaffDetail() {
   const { id } = useParams<{ id: string }>()
@@ -82,6 +70,10 @@ export default function StaffDetail() {
                 <div className="staff-detail__meta">
                   <span>{staff.area || '区域待补充'}</span>
                   <span>·</span>
+                  <span>{staff.age ? `${staff.age} 岁` : '年龄待补充'}</span>
+                  <span>·</span>
+                  <span>{staff.nativePlace || '籍贯待补充'}</span>
+                  <span>·</span>
                   <span>{staff.years} 年经验</span>
                 </div>
                 {staff.highlight ? <div className="staff-detail__highlight">{staff.highlight}</div> : null}
@@ -138,6 +130,7 @@ export default function StaffDetail() {
             ) : null}
 
             <div className="staff-detail__footer">
+              <ShareButton staff={staff} label="分享资料" />
               <Link to="/" className="button button--ghost">
                 返回首页
               </Link>

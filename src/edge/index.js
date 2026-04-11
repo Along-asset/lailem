@@ -267,10 +267,14 @@ function normalizeStaffInput(input) {
   if (!name) return { ok: false, error: 'name_required' }
 
   const area = typeof input.area === 'string' ? input.area.trim() : ''
+  const nativePlace = typeof input.nativePlace === 'string' ? input.nativePlace.trim() : ''
   const highlight = typeof input.highlight === 'string' ? input.highlight.trim() : ''
   const bio = typeof input.bio === 'string' ? input.bio.trim() : ''
   const avatarData = typeof input.avatarData === 'string' ? input.avatarData : null
   const avatarUrl = typeof input.avatarUrl === 'string' ? input.avatarUrl.trim() : ''
+
+  const age = Number.isFinite(input.age) ? input.age : Number.parseInt(String(input.age || '0'), 10)
+  const safeAge = Number.isFinite(age) && age >= 0 && age <= 100 ? age : 0
 
   const years = Number.isFinite(input.years) ? input.years : Number.parseInt(String(input.years || '0'), 10)
   const safeYears = Number.isFinite(years) && years >= 0 && years <= 80 ? years : 0
@@ -313,6 +317,8 @@ function normalizeStaffInput(input) {
     staff: {
       name,
       area,
+      age: safeAge,
+      nativePlace,
       highlight,
       bio,
       skills: safeSkills,

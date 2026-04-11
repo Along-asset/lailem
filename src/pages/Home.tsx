@@ -1,20 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiListStaff, type Staff } from '../lib/api'
-
-function staffAvatarSrc(staff: Staff): string | undefined {
-  if (staff.avatarData) return staff.avatarData
-  if (staff.avatarUrl) return staff.avatarUrl
-  return undefined
-}
-
-function tagVariant(name: string): number {
-  let hash = 0
-  for (let i = 0; i < name.length; i++) {
-    hash = (hash + name.charCodeAt(i)) % 6
-  }
-  return hash
-}
+import { staffAvatarSrc, tagVariant } from '../lib/staff'
+import { ShareButton } from '../ui/ShareButton'
 
 export default function Home() {
   const [items, setItems] = useState<Staff[]>([])
@@ -59,24 +47,13 @@ export default function Home() {
     <div className="page page--home">
       <div className="hero hero--cover">
         {videoEnabled ? (
-          <video
-            className="hero__video"
-            src="/videos/hero-loop.mp4"
-            autoPlay
-            muted
-            loop
-            playsInline
-          />
+          <video className="hero__video" src="/videos/hero-loop.mp4" autoPlay muted loop playsInline />
         ) : null}
         <div className="hero__content">
           <div className="hero__title">工作人员展示</div>
           <div className="hero__sub">公开展示员工信息，后台由管理员维护</div>
           {!videoEnabled ? (
-            <button
-              type="button"
-              className="hero__play"
-              onClick={() => setVideoEnabled(true)}
-            >
+            <button type="button" className="hero__play" onClick={() => setVideoEnabled(true)}>
               ▶
             </button>
           ) : null}
@@ -107,9 +84,7 @@ export default function Home() {
 
         {loading ? <div className="hint">加载中…</div> : null}
         {error ? (
-          <div className="hint hint--danger">
-            无法加载数据：{error}（部署到 ESA 后 /api 将由边缘函数提供）
-          </div>
+          <div className="hint hint--danger">无法加载数据：{error}（部署到 ESA 后 /api 将由边缘函数提供）</div>
         ) : null}
 
         {!loading && !error && filtered.length === 0 ? <div className="hint">暂无人员数据</div> : null}
@@ -119,6 +94,9 @@ export default function Home() {
             <Link key={s.id} to={`/staff/${encodeURIComponent(s.id)}`} className="card card--link">
               <div className="card__media">
                 {staffAvatarSrc(s) ? <img className="card__img" src={staffAvatarSrc(s)} alt={s.name} /> : null}
+                <div className="card__share-float">
+                  <ShareButton staff={s} className="button button--ghost button--card-share" label="↗" />
+                </div>
               </div>
               <div className="card__body">
                 <div className="card__row">
@@ -130,9 +108,13 @@ export default function Home() {
                 <div className="card__meta">
                   <span>{s.area || '区域待补充'}</span>
                   <span>·</span>
+                  <span>{s.age ? `${s.age} 岁` : '年龄待补充'}</span>
+                  <span>·</span>
+                  <span>{s.nativePlace || '籍贯待补充'}</span>
+                  <span>·</span>
                   <span>{s.years} 年经验</span>
                 </div>
-                {s.highlight ? <div className="card__highlight">{s.highlight}</div> : null}
+                {s.highlight ? <div className="card__highlight">{s.highlight}</div> : null}
                 {s.skills.length ? (
                   <div className="tags">
                     {s.skills.slice(0, 6).map((t) => {

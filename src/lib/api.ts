@@ -9,6 +9,8 @@ export type Staff = {
   id: string
   name: string
   area: string
+  age: number
+  nativePlace: string
   highlight: string
   bio: string
   skills: string[]
@@ -25,6 +27,8 @@ export type Staff = {
 export type StaffInput = {
   name: string
   area: string
+  age: number
+  nativePlace: string
   highlight: string
   bio: string
   skills: string[]

@@ -15,9 +15,9 @@ export function AppLayout() {
       <header className="topbar">
         <div className="topbar__inner">
           <Link to="/" className="brand">
-            <img className="brand__mark" src="/logo.png" alt="Lailem" />
+            <img className="brand__mark" src="/logo.png" alt="辰玥" />
             <div className="brand__text">
-              <div className="brand__name">Lailem</div>
+              <div className="brand__name">辰玥</div>
               <div className="brand__sub">Staff Directory</div>
             </div>
           </Link>

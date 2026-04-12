@@ -26,11 +26,9 @@ export function ShareButton({
     if (busy) return
     setBusy(true)
     try {
-      const result = await shareStaffProfile(staff)
-      if (result === 'copied') {
-        setCopied(true)
-        window.setTimeout(() => setCopied(false), 1800)
-      }
+      await shareStaffProfile(staff)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1800)
     } catch {
       window.alert('分享失败，请稍后重试')
     } finally {

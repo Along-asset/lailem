@@ -94,7 +94,7 @@ export default function StaffDetail() {
 
               <div className="staff-detail__footer staff-detail__footer--hero">
                 <ShareButton staff={staff} label="分享资料" />
-                <Link to="/" className="button button--ghost">
+                <Link to="/" className="button button--ghost staff-detail__back-home">
                   返回首页
                 </Link>
               </div>

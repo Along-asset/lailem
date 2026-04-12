@@ -1228,6 +1228,15 @@ body {
   z-index: 1;
   margin-top: 16px;
   justify-content: flex-start;
+  align-items: center;
+}
+
+.staff-detail__back-home {
+  min-width: 104px;
+  min-height: 40px;
+  padding: 8px 14px;
+  font-size: 14px;
+  flex: 0 0 auto;
 }
 
 .button--share {
@@ -1758,6 +1767,10 @@ body {
     border-radius: 14px;
   }
 
+  .staff-detail__back-home {
+    width: 100%;
+  }
+
   .staff-detail__fact-value {
     font-size: 13px;
   }
@@ -1785,11 +1798,24 @@ body {
 
   .staff-detail__footer {
     flex-direction: column;
+    align-items: stretch;
   }
 
   .staff-detail__footer .button {
     width: 100%;
     justify-content: center;
+  }
+
+  .staff-detail__footer--hero {
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .staff-detail__back-home {
+    min-height: 38px;
+    padding: 7px 12px;
+    font-size: 14px;
+    opacity: 0.88;
   }
 
   .share-page__content {

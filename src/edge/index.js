@@ -343,7 +343,7 @@ async function handleAdminLogin(request, env) {
   const result = await ensureAdminConfig(edgeKV, tenantId, password)
   if (!result.ok) return unauthorized('invalid_password')
   const tokenSecret = result.tokenSecret
-  const token = await signToken(tokenSecret, { role: 'admin', exp: Date.now() + 7 * 24 * 60 * 60 * 1000 })
+  const token = await signToken(tokenSecret, { role: 'admin', exp: Date.now() + 30 * 24 * 60 * 60 * 1000 })
   return json({ token })
 }
 
@@ -367,15 +367,16 @@ async function handleListStaff(request, env) {
 }
 
 async function requireAdmin(request, env) {
+  const expiredMessage = '登录已过期，请重新登录'
   const token = getBearerToken(request)
-  if (!token) return { ok: false, response: unauthorized() }
+  if (!token) return { ok: false, response: unauthorized(expiredMessage) }
   const edgeKV = await getEdgeKv(env)
   const tenantId = getTenantIdFromRequest(request)
   const config = await loadAdminConfig(edgeKV, tenantId)
   const tokenSecret = config && typeof config.tokenSecret === 'string' ? config.tokenSecret.trim() : ''
-  if (!tokenSecret) return { ok: false, response: unauthorized('token_secret_not_configured') }
+  if (!tokenSecret) return { ok: false, response: unauthorized(expiredMessage) }
   const verified = await verifyToken(tokenSecret, token)
-  if (!verified.ok) return { ok: false, response: unauthorized() }
+  if (!verified.ok) return { ok: false, response: unauthorized(expiredMessage) }
   return { ok: true }
 }
 

@@ -47,7 +47,7 @@ export default function StaffShare() {
 
         {!loading && !error && staff ? (
           <div className="share-panel">
-            <div className="share-panel__eyebrow">Lailem · 工作人员分享页</div>
+            <div className="share-panel__eyebrow">辰玥 · 工作人员分享页</div>
             <div className="share-panel__hero">
               <div className="share-panel__hero-main">
                 <div className="share-panel__avatar-wrap">

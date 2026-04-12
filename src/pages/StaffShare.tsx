@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { apiGetStaff, type Staff } from '../lib/api'
 import { staffAvatarSrc, tagVariant } from '../lib/staff'
 import { ShareButton } from '../ui/ShareButton'
@@ -87,9 +87,6 @@ export default function StaffShare() {
               </div>
               <div className="share-panel__hero-actions">
                 <ShareButton staff={staff} className="button button--primary button--share" label="分享此页" />
-                <Link to="/" className="button button--ghost button--share">
-                  返回首页
-                </Link>
               </div>
             </div>
 

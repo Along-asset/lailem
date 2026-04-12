@@ -52,43 +52,63 @@ export default function StaffDetail() {
 
         {staff ? (
           <div className="staff-detail">
-            <div className="staff-detail__header">
-              <div className="staff-detail__avatar">
-                {staffAvatarSrc(staff) ? (
-                  <img className="staff-detail__avatar-img" src={staffAvatarSrc(staff)} alt={staff.name} />
-                ) : (
-                  <div className="staff-detail__avatar-placeholder" />
-                )}
+            <div className="staff-detail__hero-card">
+              <div className="staff-detail__header">
+                <div className="staff-detail__avatar-shell">
+                  <div className="staff-detail__avatar">
+                    {staffAvatarSrc(staff) ? (
+                      <img className="staff-detail__avatar-img" src={staffAvatarSrc(staff)} alt={staff.name} />
+                    ) : (
+                      <div className="staff-detail__avatar-placeholder" />
+                    )}
+                  </div>
+                </div>
+                <div className="staff-detail__info">
+                  <div className="staff-detail__name-row">
+                    <h1 className="staff-detail__name">{staff.name}</h1>
+                    <span className={`pill ${staff.status === 'available' ? 'pill--ok' : 'pill--muted'}`}>
+                      {staff.status === 'available' ? '可接单' : '档期满'}
+                    </span>
+                  </div>
+                  {staff.highlight ? <div className="staff-detail__highlight">{staff.highlight}</div> : null}
+                  <div className="staff-detail__facts">
+                    <div className="staff-detail__fact">
+                      <span className="staff-detail__fact-label">服务区域</span>
+                      <span className="staff-detail__fact-value">{staff.area || '待补充'}</span>
+                    </div>
+                    <div className="staff-detail__fact">
+                      <span className="staff-detail__fact-label">年龄</span>
+                      <span className="staff-detail__fact-value">{staff.age ? `${staff.age} 岁` : '待补充'}</span>
+                    </div>
+                    <div className="staff-detail__fact">
+                      <span className="staff-detail__fact-label">籍贯</span>
+                      <span className="staff-detail__fact-value">{staff.nativePlace || '待补充'}</span>
+                    </div>
+                    <div className="staff-detail__fact">
+                      <span className="staff-detail__fact-label">经验</span>
+                      <span className="staff-detail__fact-value">{staff.years} 年经验</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="staff-detail__info">
-                <div className="staff-detail__name-row">
-                  <h1 className="staff-detail__name">{staff.name}</h1>
-                  <span className={`pill ${staff.status === 'available' ? 'pill--ok' : 'pill--muted'}`}>
-                    {staff.status === 'available' ? '可接单' : '档期满'}
-                  </span>
-                </div>
-                <div className="staff-detail__meta">
-                  <span>{staff.area || '区域待补充'}</span>
-                  <span>·</span>
-                  <span>{staff.age ? `${staff.age} 岁` : '年龄待补充'}</span>
-                  <span>·</span>
-                  <span>{staff.nativePlace || '籍贯待补充'}</span>
-                  <span>·</span>
-                  <span>{staff.years} 年经验</span>
-                </div>
-                {staff.highlight ? <div className="staff-detail__highlight">{staff.highlight}</div> : null}
+
+              <div className="staff-detail__footer staff-detail__footer--hero">
+                <ShareButton staff={staff} label="分享资料" />
+                <Link to="/" className="button button--ghost">
+                  返回首页
+                </Link>
               </div>
             </div>
 
             {staff.bio ? (
-              <div className="staff-detail__section">
+              <div className="staff-detail__section staff-detail__section--card">
                 <div className="staff-detail__section-title">简介</div>
                 <div className="staff-detail__section-body">{staff.bio}</div>
               </div>
             ) : null}
 
             {staff.skills.length ? (
-              <div className="staff-detail__section">
+              <div className="staff-detail__section staff-detail__section--card">
                 <div className="staff-detail__section-title">技能标签</div>
                 <div className="tags">
                   {staff.skills.map((t) => {
@@ -104,7 +124,7 @@ export default function StaffDetail() {
             ) : null}
 
             {staff.albums && staff.albums.length ? (
-              <div className="staff-detail__section">
+              <div className="staff-detail__section staff-detail__section--card">
                 <div className="staff-detail__section-title">照片集</div>
                 <div className="staff-detail__albums">
                   {staff.albums.map((album, index) => (
@@ -129,12 +149,6 @@ export default function StaffDetail() {
               </div>
             ) : null}
 
-            <div className="staff-detail__footer">
-              <ShareButton staff={staff} label="分享资料" />
-              <Link to="/" className="button button--ghost">
-                返回首页
-              </Link>
-            </div>
           </div>
         ) : null}
       </div>

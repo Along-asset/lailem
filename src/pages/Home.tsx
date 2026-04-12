@@ -89,34 +89,45 @@ export default function Home() {
 
         {!loading && !error && filtered.length === 0 ? <div className="hint">暂无人员数据</div> : null}
 
-        <div className="grid">
+        <div className="grid grid--staff-cards">
           {filtered.map((s) => (
-            <Link key={s.id} to={`/staff/${encodeURIComponent(s.id)}`} className="card card--link">
+            <Link key={s.id} to={`/staff/${encodeURIComponent(s.id)}`} className="card card--link card--staff">
               <div className="card__media">
                 {staffAvatarSrc(s) ? <img className="card__img" src={staffAvatarSrc(s)} alt={s.name} /> : null}
                 <div className="card__share-float">
                   <ShareButton staff={s} className="button button--ghost button--card-share" label="↗" />
                 </div>
               </div>
-              <div className="card__body">
+              <div className="card__body card__body--staff">
                 <div className="card__row">
-                  <div className="card__title">{s.name}</div>
+                  <div className="card__title-wrap">
+                    <div className="card__title">{s.name}</div>
+                    {s.highlight ? <div className="card__highlight">{s.highlight}</div> : null}
+                  </div>
                   <div className={`pill ${s.status === 'available' ? 'pill--ok' : 'pill--muted'}`}>
                     {s.status === 'available' ? '可接单' : '档期满'}
                   </div>
                 </div>
-                <div className="card__meta">
-                  <span>{s.area || '区域待补充'}</span>
-                  <span>·</span>
-                  <span>{s.age ? `${s.age} 岁` : '年龄待补充'}</span>
-                  <span>·</span>
-                  <span>{s.nativePlace || '籍贯待补充'}</span>
-                  <span>·</span>
-                  <span>{s.years} 年经验</span>
+                <div className="card__facts">
+                  <div className="card__fact">
+                    <span className="card__fact-label">服务区域</span>
+                    <span className="card__fact-value">{s.area || '待补充'}</span>
+                  </div>
+                  <div className="card__fact">
+                    <span className="card__fact-label">年龄</span>
+                    <span className="card__fact-value">{s.age ? `${s.age} 岁` : '待补充'}</span>
+                  </div>
+                  <div className="card__fact">
+                    <span className="card__fact-label">籍贯</span>
+                    <span className="card__fact-value">{s.nativePlace || '待补充'}</span>
+                  </div>
+                  <div className="card__fact">
+                    <span className="card__fact-label">经验</span>
+                    <span className="card__fact-value">{s.years} 年经验</span>
+                  </div>
                 </div>
-                {s.highlight ? <div className="card__highlight">{s.highlight}</div> : null}
                 {s.skills.length ? (
-                  <div className="tags">
+                  <div className="tags tags--staff-card">
                     {s.skills.slice(0, 6).map((t) => {
                       const variant = tagVariant(t)
                       return (

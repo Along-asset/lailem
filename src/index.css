@@ -1227,15 +1227,21 @@ body {
   position: relative;
   z-index: 1;
   margin-top: 16px;
-  justify-content: flex-start;
+  justify-content: flex-end;
   align-items: center;
 }
 
+.staff-detail__action-button {
+  min-width: 168px;
+  min-height: 52px;
+  padding: 10px 22px;
+  font-size: 20px;
+  border-radius: 18px;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
 .staff-detail__back-home {
-  min-width: 104px;
-  min-height: 40px;
-  padding: 8px 14px;
-  font-size: 14px;
   flex: 0 0 auto;
 }
 
@@ -1776,7 +1782,7 @@ body {
   }
 
   .staff-detail__footer--bottom-mobile {
-    margin-top: 2px;
+    margin-top: 10px;
   }
 
   .staff-detail__back-home--mobile {
@@ -1820,14 +1826,18 @@ body {
   }
 
   .staff-detail__footer--hero {
-    gap: 8px;
+    gap: 10px;
     margin-top: 14px;
   }
 
+  .staff-detail__action-button {
+    min-height: 46px;
+    padding: 9px 16px;
+    font-size: 16px;
+    border-radius: 16px;
+  }
+
   .staff-detail__back-home {
-    min-height: 38px;
-    padding: 7px 12px;
-    font-size: 14px;
     opacity: 0.88;
   }
 

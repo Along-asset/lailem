@@ -93,8 +93,11 @@ export default function StaffDetail() {
               </div>
 
               <div className="staff-detail__footer staff-detail__footer--hero">
-                <ShareButton staff={staff} label="分享资料" />
-                <Link to="/" className="button button--ghost staff-detail__back-home staff-detail__back-home--desktop">
+                <ShareButton staff={staff} className="button button--primary staff-detail__action-button" label="分享资料" />
+                <Link
+                  to="/"
+                  className="button button--ghost staff-detail__action-button staff-detail__back-home staff-detail__back-home--desktop"
+                >
                   返回首页
                 </Link>
               </div>
@@ -150,7 +153,10 @@ export default function StaffDetail() {
             ) : null}
 
             <div className="staff-detail__footer staff-detail__footer--bottom-mobile">
-              <Link to="/" className="button button--ghost staff-detail__back-home staff-detail__back-home--mobile">
+              <Link
+                to="/"
+                className="button button--ghost staff-detail__action-button staff-detail__back-home staff-detail__back-home--mobile"
+              >
                 返回首页
               </Link>
             </div>

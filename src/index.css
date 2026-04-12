@@ -1239,6 +1239,10 @@ body {
   flex: 0 0 auto;
 }
 
+.staff-detail__back-home--mobile {
+  display: none;
+}
+
 .button--share {
   min-width: 120px;
 }
@@ -1767,7 +1771,16 @@ body {
     border-radius: 14px;
   }
 
-  .staff-detail__back-home {
+  .staff-detail__back-home--desktop {
+    display: none;
+  }
+
+  .staff-detail__footer--bottom-mobile {
+    margin-top: 2px;
+  }
+
+  .staff-detail__back-home--mobile {
+    display: inline-flex;
     width: 100%;
   }
 
@@ -1816,6 +1829,10 @@ body {
     padding: 7px 12px;
     font-size: 14px;
     opacity: 0.88;
+  }
+
+  .staff-detail__back-home--mobile {
+    justify-content: center;
   }
 
   .share-page__content {

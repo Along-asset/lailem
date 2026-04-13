@@ -29,8 +29,12 @@ export function ShareButton({
       await shareStaffProfile(staff)
       setCopied(true)
       window.setTimeout(() => setCopied(false), 1800)
-    } catch {
-      window.alert('分享失败，请稍后重试')
+    } catch (e: unknown) {
+      if (e instanceof Error && e.message === 'clipboard_unavailable') {
+        window.alert('当前环境不支持自动复制，请更换浏览器或在系统浏览器中打开。')
+      } else {
+        window.alert('分享失败，请稍后重试')
+      }
     } finally {
       setBusy(false)
     }

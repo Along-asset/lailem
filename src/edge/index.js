@@ -1,20 +1,8 @@
 const DEFAULT_KV_NAMESPACE = 'lailem_staff'
-const DEFAULT_ADMIN_PASSWORD = ''
-const DEFAULT_TOKEN_SECRET = ''
 
 const STAFF_INDEX_KEY = 'staff_index'
 const ADMIN_CONFIG_KEY = 'admin_config'
 const MAX_BODY_BYTES = 2_000_000
-
-function normalizeEnvValue(v) {
-  if (v == null) return null
-  if (typeof v === 'string') return v
-  try {
-    return String(v)
-  } catch {
-    return null
-  }
-}
 
 function readEnvValue(env, key) {
   function normalizeEnvValue(value) {
@@ -66,14 +54,6 @@ function firstEnv(env, keys, fallback) {
 
 function getKvNamespace(env) {
   return firstEnv(env, ['KV_NAMESPACE', 'ESA_KV_NAMESPACE', 'ESA_KV', 'ESA_KV_NS'], DEFAULT_KV_NAMESPACE)
-}
-
-function getAdminPassword(env) {
-  return firstEnv(env, ['ADMIN_PASSWORD', 'ESA_ADMIN_PASSWORD'], DEFAULT_ADMIN_PASSWORD)
-}
-
-function getTokenSecret(env) {
-  return firstEnv(env, ['JWT_SECRET', 'TOKEN_SECRET', 'ESA_JWT_SECRET', 'ESA_TOKEN_SECRET'], DEFAULT_TOKEN_SECRET)
 }
 
 function json(data, init = {}) {
@@ -478,10 +458,37 @@ async function routeApi(request, env) {
   return notFound()
 }
 
+function getAssetsBinding(env) {
+  if (!env || typeof env !== 'object') return null
+  const candidates = ['ASSETS', 'assets', '__STATIC_CONTENT', 'STATIC_ASSETS']
+  for (const key of candidates) {
+    const binding = env[key]
+    if (binding && typeof binding.fetch === 'function') return binding
+  }
+  return null
+}
+
+async function serveStaticAsset(request, env) {
+  const assets = getAssetsBinding(env)
+  if (!assets) return notFound()
+
+  const response = await assets.fetch(request)
+  if (response.status !== 404) return response
+
+  const url = new URL(request.url)
+  const acceptsHtml = (request.headers.get('accept') || '').includes('text/html')
+  const looksLikeAsset = /\.[a-zA-Z0-9]+$/.test(url.pathname)
+  if (!acceptsHtml || looksLikeAsset) return response
+
+  const spaUrl = new URL(request.url)
+  spaUrl.pathname = '/index.html'
+  return assets.fetch(new Request(spaUrl.toString(), request))
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
     if (url.pathname.startsWith('/api/')) return routeApi(request, env)
-    return notFound()
+    return serveStaticAsset(request, env)
   },
 }

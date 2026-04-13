@@ -11,7 +11,6 @@ export default function Home() {
 
   const [q, setQ] = useState('')
   const [status, setStatus] = useState<'all' | 'available' | 'busy'>('all')
-  const [videoEnabled, setVideoEnabled] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -46,17 +45,9 @@ export default function Home() {
   return (
     <div className="page page--home">
       <div className="hero hero--cover">
-        {videoEnabled ? (
-          <video className="hero__video" src="/videos/hero-loop.mp4" autoPlay muted loop playsInline />
-        ) : null}
         <div className="hero__content">
           <div className="hero__title">工作人员展示</div>
           <div className="hero__sub">公开展示员工信息，后台由管理员维护</div>
-          {!videoEnabled ? (
-            <button type="button" className="hero__play" onClick={() => setVideoEnabled(true)}>
-              ▶
-            </button>
-          ) : null}
         </div>
       </div>
 

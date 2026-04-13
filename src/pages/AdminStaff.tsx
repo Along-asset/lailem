@@ -132,6 +132,19 @@ export default function AdminStaff() {
     })
   }
 
+  function removeAlbumImage(albumIndex: number, imageIndex: number) {
+    setForm((p) => {
+      const albums = p.albums ? [...p.albums] : []
+      const current = albums[albumIndex]
+      if (!current || !current.images[imageIndex]) return p
+      albums[albumIndex] = {
+        ...current,
+        images: current.images.filter((_, idx) => idx !== imageIndex),
+      }
+      return { ...p, albums }
+    })
+  }
+
   async function polishBio() {
     const original = form.bio.trim()
     if (!original) return
@@ -495,7 +508,18 @@ export default function AdminStaff() {
                     </div>
                     <div className="album-preview">
                       {album.images.map((img, i) => (
-                        <img key={i} className="album-preview__img" src={img} alt={`album-${index}-${i}`} />
+                        <div key={i} className="album-preview__item">
+                          <img className="album-preview__img" src={img} alt={`album-${index}-${i}`} />
+                          <button
+                            type="button"
+                            className="album-preview__remove"
+                            onClick={() => removeAlbumImage(index, i)}
+                            aria-label={`删除第 ${i + 1} 张照片`}
+                            title="删除照片"
+                          >
+                            ×
+                          </button>
+                        </div>
                       ))}
                       <label className="album-upload">
                         <input
